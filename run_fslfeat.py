@@ -75,6 +75,8 @@ class Spinner:
             return False
 
 
+
+
 if not os.path.exists(outputDir): os.makedirs(outputDir)
 
 # Check FSL, .fsf setup and ICA_AROMA paths
@@ -87,14 +89,14 @@ if exitstatus: sys.exit("please make ICA AROMA available before proceeding!")
 
 if not os.path.exists("%s/template.fsf"%(inputDir)): sys.exit("No FEAT setup template file found in %s, exiting script"%(inputDir)) 
 
+
 # Iterate subjects
 subdirs=glob.glob("%s/hum_*"%(inputDir))
 with Spinner():
     for dir in list(subdirs):
-    #for dir in list(subdirs):
       splitdir = dir.split('/')
       subj_id = splitdir[-1:]
-      
+     
       image=glob.glob("%s%s*.nii"%(dir,fourDdir))[0]
       struct_image=glob.glob("%s%s*.nii"%(dir,structDir))[0]
       
@@ -110,29 +112,22 @@ with Spinner():
        
         # run FSL
         cmd = '%s %s' % (fsl_dir, design_file)
+        print('*********************** processing subject %s'%subj_id[0])
+        print('running FSL')
         child = p.spawn(cmd)
         child.logfile = sys.stdout
         child.wait()
-        print('*********************** processing subject %s'%subj_id[0])
-        #print '*********************** processing subject %s'%(subj_id[0])
-        print('running FSL')
-        print(child.isalive())
-        print('finished FSL')
-        
-        mvmntParamDir ="%s%s"%(mvmntParamDir,subj_id[0])
-        mvntFile=glob.glob("%s%s*.txt"%(inputDir,mvmntParamDir))
+         
+        mvntFile=glob.glob("%s/%s%s*.txt"%(inputDir,subj_id[0], mvmntParamDir))
         aromaInputDir=glob.glob("%s/%s%s*_output*.feat"%(inputDir, subj_id[0], fourDdir))[0]
         aromaOutputFileName='%s/%s'%(aromaInputDir,aromaOutputFolder)
-    
+      
         # run ICA-AROMA
         cmd = 'python %s -feat %s -out %s -mc %s -tr 2.0 -overwrite' % (ICA_AROMA, aromaInputDir, aromaOutputFileName,mvntFile[0])
+        print('running ICA-AROMA ')
         child = p.spawn(cmd)
-        #print child
         child.logfile = sys.stdout
         child.wait()
-        print('running ICA-AROMA ')
-        print(child.isalive())
-        print('finished ICA-AROMA ')
         print('*********************** done with subject %s'%subj_id[0])
 print('FINISHED JOB!')
 
